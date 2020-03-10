@@ -34,14 +34,8 @@ class Metrics(object):
 
         precision_scores = {}
         for tag in self.tagset:
-            # print(self.tagset)
-            # print(self.predict_tags_counter)
-            # print(tag)
-            if self.predict_tags_counter[tag]>0:
-                precision_scores[tag] = self.correct_tags_number.get(tag, 0) / \
-                    self.predict_tags_counter[tag]
-            else:
-                precision_scores[tag] = self.correct_tags_number.get(tag, 0) / (self.predict_tags_counter[tag]+1)
+            precision_scores[tag] = self.correct_tags_number.get(tag, 0) / \
+               (self.predict_tags_counter[tag]+1)
 
         return precision_scores
 
@@ -49,11 +43,8 @@ class Metrics(object):
 
         recall_scores = {}
         for tag in self.tagset:
-            if self.golden_tags_counter[tag]>0:
-                recall_scores[tag] = self.correct_tags_number.get(tag, 0) / \
-                    self.golden_tags_counter[tag]
-            else:
-                recall_scores[tag] = self.correct_tags_number.get(tag, 0) / (self.golden_tags_counter[tag]+1)               
+            recall_scores[tag] = self.correct_tags_number.get(tag, 0) / \
+                (self.golden_tags_counter[tag]+1)
         return recall_scores
 
     def cal_f1(self):

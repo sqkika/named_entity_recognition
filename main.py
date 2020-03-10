@@ -2,7 +2,7 @@
 from data import build_corpus
 from utils import extend_maps, prepocess_data_for_lstmcrf
 from evaluate import hmm_train_eval, crf_train_eval, \
-    bilstm_train_and_eval, ensemble_evaluate,bilstm_eval
+    bilstm_train_and_eval, ensemble_evaluate, bilstm_eval
 
 
 def main():
@@ -15,38 +15,6 @@ def main():
     dev_word_lists, dev_tag_lists = build_corpus("dev", make_vocab=False)
     test_word_lists, test_tag_lists = build_corpus("test", make_vocab=False)
 
-    # print(word2id)
-    # print(tag2id)
-    # print(test_word_lists)
-    训练评估ｈｍｍ模型
-    print("正在训练评估HMM模型...")
-    hmm_pred = hmm_train_eval(
-        (train_word_lists, train_tag_lists),
-        (test_word_lists, test_tag_lists),
-        word2id,
-        tag2id
-    )
-    
-    # # 训练评估CRF模型
-    print("正在训练评估CRF模型...")
-    crf_pred = crf_train_eval(
-        (train_word_lists, train_tag_lists),
-        (test_word_lists, test_tag_lists)
-    )
-
-    # # 训练评估BI-LSTM模型
-    print("正在训练评估双向LSTM模型...")
-    # LSTM模型训练的时候需要在word2id和tag2id加入PAD和UNK
-    bilstm_word2id, bilstm_tag2id = extend_maps(word2id, tag2id, for_crf=False)
-    lstm_pred = bilstm_train_and_eval(
-        (train_word_lists, train_tag_lists),
-        (dev_word_lists, dev_tag_lists),
-        (test_word_lists, test_tag_lists),
-        bilstm_word2id, bilstm_tag2id,
-        crf=False
-    )
-
-    print("正在训练评估Bi-LSTM+CRF模型...")
     # 如果是加了CRF的lstm还要加入<start>和<end> (解码的时候需要用到)
     crf_word2id, crf_tag2id = extend_maps(word2id, tag2id, for_crf=True)
     # 还需要额外的一些数据处理
@@ -60,24 +28,49 @@ def main():
         test_word_lists, test_tag_lists, test=True
     )
 
-    lstmcrf_pred = bilstm_train_and_eval(
-        (train_word_lists, train_tag_lists),
-        (dev_word_lists, dev_tag_lists),
-        (test_word_lists, test_tag_lists),
-        crf_word2id, crf_tag2id
-    )
+    mode = 'train'
+    if mode == 'train':
+        # # 训练评估ｈｍｍ模型
+        # print("正在训练评估HMM模型...")
+        # hmm_pred = hmm_train_eval(
+        #     (train_word_lists, train_tag_lists),
+        #     (test_word_lists, test_tag_lists),
+        #     word2id,
+        #     tag2id
+        # )
 
-    ensemble_evaluate(
-        [hmm_pred, crf_pred, lstm_pred, lstmcrf_pred],
-        test_tag_lists
-    )
+        # # 训练评估CRF模型
+        # print("正在训练评估CRF模型...")
+        # crf_pred = crf_train_eval(
+        #     (train_word_lists, train_tag_lists),
+        #     (test_word_lists, test_tag_lists)
+        # )
 
-    # for inferrence and generator tags for data use this:
-    # lstmcrf_pred = bilstm_eval((test_word_lists, test_tag_lists),crf_word2id, crf_tag2id)
-    # print(lstmcrf_pred)
+        # # 训练评估BI-LSTM模型
+        # print("正在训练评估双向LSTM模型...")
+        # # LSTM模型训练的时候需要在word2id和tag2id加入PAD和UNK
+        # bilstm_word2id, bilstm_tag2id = extend_maps(word2id, tag2id, for_crf=False)
+        # lstm_pred = bilstm_train_and_eval(
+        #     (train_word_lists, train_tag_lists),
+        #     (dev_word_lists, dev_tag_lists),
+        #     (test_word_lists, test_tag_lists),
+        #     bilstm_word2id, bilstm_tag2id,
+        #     crf=False
+        # )
+
+        print("正在训练评估Bi-LSTM+CRF模型...")
+
+        lstmcrf_pred = bilstm_train_and_eval(
+            (train_word_lists, train_tag_lists),
+            (dev_word_lists, dev_tag_lists),
+            (test_word_lists, test_tag_lists),
+            crf_word2id, crf_tag2id
+        )
+    elif mode == 'generate':
+        lstmcrf_pred = bilstm_eval((test_word_lists, test_tag_lists),crf_word2id, crf_tag2id)
+        print(lstmcrf_pred)
 
 
-    
 
 if __name__ == "__main__":
     main()
